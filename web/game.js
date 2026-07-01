@@ -1,6 +1,5 @@
 import init, {
     init as wasmInit,
-    get_target,
     is_valid_move,
     get_distance,
     get_start_word,
@@ -9,21 +8,30 @@ import init, {
     get_optimal_path,
     word_count,
     validate_error,
-    is_in_word_list,
 } from './pkg/pipiple.js';
+
+// ============================================================
+// Mode configuration
+// ============================================================
+
+const MODES = {
+    pipi: { name: 'Pipiple', emoji: '🚽', target: 'pipi', highlight: '🟨', empty: '⬜' },
+    caca: { name: 'Cacaple', emoji: '💩', target: 'caca', highlight: '🟫', empty: '⬛' },
+    vomi: { name: 'Vomiple', emoji: '🤮', target: 'vomi', highlight: '🟩', empty: '⬛' },
+};
 
 // ============================================================
 // State
 // ============================================================
 
-let wasm;
+let mode = 'pipi';
 let guesses = [];
 let currentWord = '';
 let gameOver = false;
 let target = '';
 
 // ============================================================
-// localStorage helpers
+// localStorage helpers (mode-scoped)
 // ============================================================
 
 function lsGet(key, fallback) {
@@ -37,15 +45,18 @@ function lsSet(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
-function getGuesses() { return lsGet('pipiple_guesses', []); }
-function setGuesses(g) { lsSet('pipiple_guesses', g); }
-function getGames() { return lsGet('pipiple_games', {}); }
-function getStreak() { return lsGet('pipiple_streak', 0); }
-function setStreak(s) { lsSet('pipiple_streak', s); }
-function getBestStreak() { return lsGet('pipiple_bestStreak', 0); }
-function setBestStreak(s) { lsSet('pipiple_bestStreak', s); }
-function getTimeLastPlayed() { return lsGet('pipiple_dateLastPlayed', 0); }
-function getTimeLastWon() { return lsGet('pipiple_dateLastWon', 0); }
+// Prefix keys with mode so each mode has independent state
+function mk(key) { return `${mode}_${key}`; }
+
+function getGuesses() { return lsGet(mk('guesses'), []); }
+function setGuesses(g) { lsSet(mk('guesses'), g); }
+function getGames() { return lsGet(mk('games'), {}); }
+function getStreak() { return lsGet(mk('streak'), 0); }
+function setStreak(s) { lsSet(mk('streak'), s); }
+function getBestStreak() { return lsGet(mk('bestStreak'), 0); }
+function setBestStreak(s) { lsSet(mk('bestStreak'), s); }
+function getTimeLastPlayed() { return lsGet(mk('dateLastPlayed'), 0); }
+function getTimeLastWon() { return lsGet(mk('dateLastWon'), 0); }
 
 function isToday(ts) {
     return get_day_number(ts) === get_day_number(Date.now());
@@ -58,12 +69,69 @@ function winGame(extraGuesses) {
     const games = getGames();
     const key = String(extraGuesses);
     games[key] = (games[key] || 0) + 1;
-    lsSet('pipiple_games', games);
+    lsSet(mk('games'), games);
 
     const streak = getStreak() + 1;
     setStreak(streak);
     if (streak > getBestStreak()) setBestStreak(streak);
-    lsSet('pipiple_dateLastWon', Date.now());
+    lsSet(mk('dateLastWon'), Date.now());
+}
+
+// ============================================================
+// Theme / Mode switching
+// ============================================================
+
+function getMode() {
+    return lsGet('cacaple_mode', 'pipi');
+}
+
+function setMode(m) {
+    lsSet('cacaple_mode', m);
+}
+
+function applyTheme() {
+    const cfg = MODES[mode];
+    document.documentElement.setAttribute('data-theme', mode);
+    document.getElementById('game-title').textContent = cfg.name;
+    document.getElementById('game-logo').textContent = cfg.emoji;
+    document.title = `${cfg.name} — Le jeu de mots ${cfg.emoji}`;
+
+    // Update favicon
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${cfg.emoji}</text></svg>`;
+    document.getElementById('favicon').href = `data:image/svg+xml,${svg}`;
+
+    // Update help modal
+    updateHelpBody();
+
+    // Highlight active mode card
+    document.querySelectorAll('.ModeCard').forEach(card => {
+        card.classList.toggle('active', card.dataset.mode === mode);
+    });
+}
+
+function updateHelpBody() {
+    const cfg = MODES[mode];
+    const targetUp = cfg.target.toUpperCase();
+    document.getElementById('help-body').innerHTML = `
+        <p>Transformez le mot du jour en <b>${targetUp}</b> ${cfg.emoji}</p>
+        <p>Changez <b>une seule lettre</b> à chaque étape.</p>
+        <p>Chaque mot intermédiaire doit être un vrai mot français.</p>
+        <p>Trouvez le chemin le plus court possible !</p>
+        <hr>
+        <p>Les lettres <span class="highlight-example">colorées</span> sont celles qui correspondent à ${targetUp}.</p>
+        <hr>
+        <p>Un nouveau puzzle chaque jour à 10h (heure de Paris).</p>
+    `;
+}
+
+function switchMode(newMode) {
+    if (!MODES[newMode] || newMode === mode) return;
+    mode = newMode;
+    target = MODES[mode].target;
+    setMode(mode);
+    applyTheme();
+    initGame();
+    closeModal('modal-mode');
 }
 
 // ============================================================
@@ -98,7 +166,6 @@ function renderGrid() {
         container.appendChild(makeRow(currentPadded, { isCurrent: true, suppressHighlight: true }));
     }
 
-    // Scroll to bottom
     const sc = document.getElementById('ScrollContainer');
     requestAnimationFrame(() => {
         sc.scrollTop = sc.scrollHeight;
@@ -136,7 +203,6 @@ function buildKeyboard() {
             btn.className = 'Key' + (key === 'Enter' || key === '⌫' ? ' wide' : '');
             btn.textContent = key === 'Enter' ? '↵' : key === '⌫' ? '⌫' : key.toUpperCase();
             btn.addEventListener('click', () => handleKey(key));
-            // Prevent focus stealing (keeps physical keyboard working)
             btn.addEventListener('mousedown', e => e.preventDefault());
             rowEl.appendChild(btn);
         }
@@ -164,11 +230,9 @@ function handleKey(key) {
         return;
     }
 
-    // Single letter
     if (/^[a-zA-Z]$/.test(key) && currentWord.length < 4) {
         currentWord += key.toLowerCase();
         renderGrid();
-        // Pop animation on last box
         const boxes = document.querySelectorAll('.Row:last-child .Box.current');
         const lastFilled = [...boxes].filter(b => b.textContent.trim());
         if (lastFilled.length) {
@@ -183,7 +247,7 @@ function submitWord() {
     if (currentWord.length !== 4) return;
 
     const previous = guesses[guesses.length - 1] || '';
-    const error = validate_error(currentWord, previous);
+    const error = validate_error(mode, currentWord, previous);
     if (error) {
         showError(error);
         currentWord = '';
@@ -196,7 +260,7 @@ function submitWord() {
 
     if (currentWord.toLowerCase() === target) {
         gameOver = true;
-        const par = get_distance(guesses[0]);
+        const par = get_distance(mode, guesses[0]);
         const moves = guesses.length - 1;
         const extra = moves - par;
         winGame(extra);
@@ -216,11 +280,12 @@ function submitWord() {
 function startEmojiRain() {
     const container = document.getElementById('EmojiRain');
     container.innerHTML = '';
+    const emoji = MODES[mode].emoji;
     const count = 30;
     for (let i = 0; i < count; i++) {
         const drop = document.createElement('div');
         drop.className = 'EmojiRaindrop';
-        drop.textContent = '🚽';
+        drop.textContent = emoji;
         drop.style.left = `${Math.random() * 100}%`;
         drop.style.animationDelay = `${Math.random() * 2}s`;
         drop.style.animationDuration = `${2 + Math.random() * 2}s`;
@@ -243,7 +308,6 @@ function closeModal(id) {
 }
 
 function setupModals() {
-    // Close on backdrop click or close button
     document.querySelectorAll('.Modal').forEach(modal => {
         modal.querySelector('.ModalBackdrop').addEventListener('click', () => {
             modal.classList.add('hide');
@@ -253,9 +317,15 @@ function setupModals() {
         });
     });
 
+    document.getElementById('btn-mode').addEventListener('click', () => openModal('modal-mode'));
     document.getElementById('btn-help').addEventListener('click', () => openModal('modal-help'));
     document.getElementById('btn-stats').addEventListener('click', () => showStatsModal());
     document.getElementById('btn-yesterday').addEventListener('click', () => showYesterdayModal());
+
+    // Mode cards
+    document.querySelectorAll('.ModeCard').forEach(card => {
+        card.addEventListener('click', () => switchMode(card.dataset.mode));
+    });
 }
 
 // ============================================================
@@ -263,10 +333,11 @@ function setupModals() {
 // ============================================================
 
 function showStatsModal() {
+    const cfg = MODES[mode];
     const container = document.getElementById('stats-content');
     const savedGuesses = getGuesses();
     const isFinished = savedGuesses.length > 0 && savedGuesses[savedGuesses.length - 1]?.toLowerCase() === target;
-    const par = savedGuesses.length > 0 ? get_distance(savedGuesses[0]) : 0;
+    const par = savedGuesses.length > 0 ? get_distance(mode, savedGuesses[0]) : 0;
     const moves = savedGuesses.length - 1;
 
     let html = '';
@@ -277,14 +348,12 @@ function showStatsModal() {
             Le chemin optimal était de <b>${par} coup${par > 1 ? 's' : ''}</b>.
         </div>`;
 
-        // Copy button
         html += `<div style="text-align:center">
             <button class="copy-btn" id="copy-results">Copier les résultats</button>
             <div class="copy-feedback" id="copy-feedback"></div>
         </div>`;
     }
 
-    // Totals
     const games = getGames();
     let totalWins = 0, totalExtra = 0;
     for (const [extra, count] of Object.entries(games)) {
@@ -294,7 +363,7 @@ function showStatsModal() {
     const avg = totalWins > 0 ? (totalExtra / totalWins).toFixed(1) : '0';
 
     html += `<div class="Totals">
-        <b>Statistiques</b>
+        <b>Statistiques — ${cfg.name} ${cfg.emoji}</b>
         <div class="Entries">
             <div class="Entry"><h2>${totalWins}</h2><p>Victoires</p></div>
             <div class="Entry"><h2>${avg}</h2><p>Moy. coups<br>en trop</p></div>
@@ -303,7 +372,6 @@ function showStatsModal() {
         </div>
     </div>`;
 
-    // Histogram
     if (totalWins > 0) {
         const maxExtra = Math.max(...Object.keys(games).map(Number));
         const maxCount = Math.max(...Object.values(games));
@@ -320,7 +388,6 @@ function showStatsModal() {
         html += `</div>`;
     }
 
-    // Countdown
     html += `<div class="Countdown">
         Prochain puzzle dans<br>
         <span class="time" id="countdown-time"></span>
@@ -328,27 +395,25 @@ function showStatsModal() {
 
     container.innerHTML = html;
 
-    // Wire copy button
     if (isFinished) {
         document.getElementById('copy-results').addEventListener('click', copyResults);
     }
 
-    // Start countdown
     updateCountdown();
-
     openModal('modal-stats');
 }
 
 function copyResults() {
+    const cfg = MODES[mode];
     const savedGuesses = getGuesses();
-    const par = get_distance(savedGuesses[0]);
+    const par = get_distance(mode, savedGuesses[0]);
     const moves = savedGuesses.length - 1;
     const dayNum = get_day_number(getTimeLastPlayed() || Date.now());
 
-    let text = `Pipiple #${dayNum} 🚽 ${moves}/${par}\n`;
+    let text = `${cfg.name} #${dayNum} ${cfg.emoji} ${moves}/${par}\n`;
     for (const word of savedGuesses) {
         for (let i = 0; i < 4; i++) {
-            text += word[i]?.toLowerCase() === target[i] ? '🟨' : '⬜';
+            text += word[i]?.toLowerCase() === target[i] ? cfg.highlight : cfg.empty;
         }
         text += '\n';
     }
@@ -401,14 +466,13 @@ function showYesterdayModal() {
         return;
     }
 
-    // Get yesterday's epoch ms
     const epoch = 1751356800000;
     const dayMs = 86400000;
     const yesterdayMs = epoch + (dayNum - 1) * dayMs + 1;
 
-    const yesterdayWord = get_start_word(yesterdayMs);
-    const yesterdayDist = get_start_word_distance(yesterdayMs);
-    const pathJson = get_optimal_path(yesterdayWord);
+    const yesterdayWord = get_start_word(mode, yesterdayMs);
+    const yesterdayDist = get_start_word_distance(mode, yesterdayMs);
+    const pathJson = get_optimal_path(mode, yesterdayWord);
     const path = JSON.parse(pathJson);
 
     document.getElementById('yesterday-title').textContent =
@@ -430,23 +494,21 @@ function showYesterdayModal() {
 // ============================================================
 
 function initGame() {
+    const cfg = MODES[mode];
     const now = Date.now();
-    const todayStart = get_start_word(now);
+    const todayStart = get_start_word(mode, now);
     const dayNum = get_day_number(now);
+    const targetUp = target.toUpperCase();
 
-    // Update subheader
-    document.getElementById('subheader').textContent = `#${dayNum} : ${todayStart.toUpperCase()} → PIPI`;
+    document.getElementById('subheader').textContent = `#${dayNum} : ${todayStart.toUpperCase()} → ${targetUp}`;
 
     const savedGuesses = getGuesses();
     const lastPlayed = getTimeLastPlayed();
 
-    // Check if we need to start a new game
     if (!isToday(lastPlayed) || savedGuesses.length === 0 || savedGuesses[0] !== todayStart) {
-        // New game
         guesses = [todayStart];
         setGuesses(guesses);
 
-        // Reset streak if didn't win yesterday
         if (!isYesterday(getTimeLastWon()) && !isToday(getTimeLastWon())) {
             setStreak(0);
         }
@@ -454,9 +516,9 @@ function initGame() {
         guesses = savedGuesses;
     }
 
-    lsSet('pipiple_dateLastPlayed', Date.now());
+    lsSet(mk('dateLastPlayed'), Date.now());
 
-    // Check if already won
+    gameOver = false;
     if (guesses.length > 0 && guesses[guesses.length - 1].toLowerCase() === target) {
         gameOver = true;
     }
@@ -473,12 +535,16 @@ async function boot() {
     await init();
     wasmInit();
 
-    target = get_target().toLowerCase();
+    // Restore saved mode
+    mode = getMode();
+    if (!MODES[mode]) mode = 'pipi';
+    target = MODES[mode].target;
 
-    console.log(`Pipiple loaded — ${word_count()} words, target: ${target.toUpperCase()}`);
+    console.log(`${MODES[mode].name} loaded — ${word_count(mode)} words, target: ${target.toUpperCase()}`);
 
     buildKeyboard();
     setupModals();
+    applyTheme();
     initGame();
 
     // Physical keyboard
@@ -489,15 +555,14 @@ async function boot() {
                 handleKey(e.key);
             }
         }
-        // Close modal on Escape
         if (e.key === 'Escape') {
             document.querySelectorAll('.Modal:not(.hide)').forEach(m => m.classList.add('hide'));
         }
     });
 
     // Show help on first visit
-    if (!lsGet('pipiple_hasVisited', false)) {
-        lsSet('pipiple_hasVisited', true);
+    if (!lsGet('cacaple_hasVisited', false)) {
+        lsSet('cacaple_hasVisited', true);
         openModal('modal-help');
     }
 }

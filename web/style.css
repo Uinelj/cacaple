@@ -1,21 +1,77 @@
-:root {
-    --bg: #1a1a2e;
-    --bg-light: #16213e;
-    --surface: #0f3460;
+/* ============================================================
+   CSS Variables — one set per theme
+   ============================================================ */
+
+:root,
+[data-theme="pipi"] {
+    --bg: #faf8f0;
+    --bg-light: #f0ece0;
+    --surface: #e8e0c8;
     --accent: #e2b93b;
     --accent-glow: #f0d060;
-    --text: #eee;
-    --text-dim: #999;
+    --text: #2a2520;
+    --text-dim: #8a8070;
     --highlight: #e2b93b;
+    --error: #c0392b;
+    --success: #27ae60;
+    --box-bg: #fff;
+    --box-border: #d4cbb0;
+    --key-bg: #e8e0c8;
+    --key-hover: #d8d0b8;
+    --modal-bg: #faf8f0;
+    --radius: 8px;
+    --emoji: "🚽";
+    --title-gradient-from: #d4a017;
+    --title-gradient-to: #e2b93b;
+}
+
+[data-theme="caca"] {
+    --bg: #1a1510;
+    --bg-light: #2a2015;
+    --surface: #3d2e1a;
+    --accent: #a0722b;
+    --accent-glow: #c89040;
+    --text: #e8dcc8;
+    --text-dim: #8a7a60;
+    --highlight: #a0722b;
     --error: #e74c3c;
     --success: #2ecc71;
-    --box-bg: #1e2a45;
-    --box-border: #2a3a5c;
-    --key-bg: #2a3a5c;
-    --key-hover: #3a4a6c;
-    --modal-bg: #16213e;
+    --box-bg: #2a2015;
+    --box-border: #4a3a25;
+    --key-bg: #3d2e1a;
+    --key-hover: #5a4530;
+    --modal-bg: #2a2015;
     --radius: 8px;
+    --emoji: "💩";
+    --title-gradient-from: #a0722b;
+    --title-gradient-to: #c89040;
 }
+
+[data-theme="vomi"] {
+    --bg: #0d1a0d;
+    --bg-light: #142014;
+    --surface: #1a3a1a;
+    --accent: #4ade50;
+    --accent-glow: #70ff70;
+    --text: #d0f0d0;
+    --text-dim: #5a8a5a;
+    --highlight: #4ade50;
+    --error: #ff4040;
+    --success: #4ade50;
+    --box-bg: #142014;
+    --box-border: #2a4a2a;
+    --key-bg: #1a3a1a;
+    --key-hover: #2a5a2a;
+    --modal-bg: #142014;
+    --radius: 8px;
+    --emoji: "🤮";
+    --title-gradient-from: #30c030;
+    --title-gradient-to: #70ff70;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
 
 * {
     margin: 0;
@@ -30,6 +86,7 @@ html, body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     overflow: hidden;
     touch-action: manipulation;
+    transition: background 0.3s, color 0.3s;
 }
 
 #app {
@@ -60,7 +117,7 @@ html, body {
     font-size: 2em;
     font-weight: 800;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, var(--accent), #f5c842);
+    background: linear-gradient(135deg, var(--title-gradient-from), var(--title-gradient-to));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -156,7 +213,7 @@ html, body {
 .Box.highlight {
     background: var(--accent);
     border-color: var(--accent-glow);
-    color: #1a1a2e;
+    color: var(--bg);
 }
 
 .Box.current {
@@ -299,6 +356,53 @@ html, body {
     to { opacity: 1; }
 }
 
+/* ========== Mode Picker ========== */
+
+.ModeGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ModeCard {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--box-bg);
+    border: 2px solid var(--box-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+    text-align: left;
+}
+
+.ModeCard:hover {
+    border-color: var(--accent);
+    transform: scale(1.02);
+}
+
+.ModeCard.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--bg);
+}
+
+.ModeEmoji {
+    font-size: 2em;
+}
+
+.ModeName {
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+.ModeDesc {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
 /* ========== Intro ========== */
 
 .Intro p {
@@ -314,7 +418,7 @@ html, body {
 
 .highlight-example {
     background: var(--accent);
-    color: #1a1a2e;
+    color: var(--bg);
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: 700;
@@ -384,12 +488,12 @@ html, body {
 
 .HistogramBar.current {
     background: var(--accent);
-    color: #1a1a2e;
+    color: var(--bg);
 }
 
 .copy-btn {
     background: var(--accent);
-    color: #1a1a2e;
+    color: var(--bg);
     border: none;
     border-radius: var(--radius);
     padding: 10px 24px;

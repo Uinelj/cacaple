@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Pipiple — Le jeu de mots 🚽</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚽</text></svg>">
+    <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚽</text></svg>">
 </head>
 <body>
     <div id="app">
         <header class="Header">
             <div class="title">
-                <h1>Pipiple</h1>
-                <span class="logo">🚽</span>
+                <h1 id="game-title">Pipiple</h1>
+                <span class="logo" id="game-logo">🚽</span>
             </div>
             <span class="subheader" id="subheader"></span>
             <div class="header-buttons">
+                <button id="btn-mode" title="Changer de mode">🎨</button>
                 <button id="btn-help" title="Comment jouer">❓</button>
                 <button id="btn-yesterday" title="Hier">📅</button>
                 <button id="btn-stats" title="Statistiques">📊</button>
@@ -33,22 +34,39 @@
         <div class="EmojiRain" id="EmojiRain"></div>
     </div>
 
+    <!-- Mode Picker Modal -->
+    <div class="Modal hide" id="modal-mode">
+        <div class="ModalBackdrop"></div>
+        <div class="ModalContent">
+            <h1 class="ModalTitle">Choisir un mode</h1>
+            <button class="ModalCloseButton">✕</button>
+            <div class="ModeGrid" id="mode-grid">
+                <button class="ModeCard" data-mode="pipi">
+                    <span class="ModeEmoji">🚽</span>
+                    <span class="ModeName">Pipiple</span>
+                    <span class="ModeDesc">Mode clair</span>
+                </button>
+                <button class="ModeCard" data-mode="caca">
+                    <span class="ModeEmoji">💩</span>
+                    <span class="ModeName">Cacaple</span>
+                    <span class="ModeDesc">Mode sombre</span>
+                </button>
+                <button class="ModeCard" data-mode="vomi">
+                    <span class="ModeEmoji">🤮</span>
+                    <span class="ModeName">Vomiple</span>
+                    <span class="ModeDesc">Mode toxique</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Help Modal -->
     <div class="Modal hide" id="modal-help">
         <div class="ModalBackdrop"></div>
         <div class="ModalContent">
             <h1 class="ModalTitle">Comment jouer</h1>
             <button class="ModalCloseButton">✕</button>
-            <div class="Intro">
-                <p>Transformez le mot du jour en <b>PIPI</b> 🚽</p>
-                <p>Changez <b>une seule lettre</b> à chaque étape.</p>
-                <p>Chaque mot intermédiaire doit être un vrai mot français.</p>
-                <p>Trouvez le chemin le plus court possible !</p>
-                <hr>
-                <p>Exemple : <b>TIRE → TIPE → PIPE → PIPI</b></p>
-                <p>Les lettres <span class="highlight-example">dorées</span> sont celles qui correspondent à PIPI.</p>
-                <hr>
-                <p>Un nouveau puzzle chaque jour à 10h (heure de Paris).</p>
+            <div class="Intro" id="help-body">
             </div>
         </div>
     </div>
