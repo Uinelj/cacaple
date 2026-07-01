@@ -410,7 +410,7 @@ function copyResults() {
     const moves = savedGuesses.length - 1;
     const dayNum = get_day_number(getTimeLastPlayed() || Date.now());
 
-    let text = `${cfg.name} #${dayNum} ${cfg.emoji} ${moves}/${par}\n`;
+    let text = `${cfg.name} #${dayNum + 1} ${cfg.emoji} ${moves}/${par}\nhttps://uinelj.github.io/cacaple\n\n`;
     for (const word of savedGuesses) {
         for (let i = 0; i < 4; i++) {
             text += word[i]?.toLowerCase() === target[i] ? cfg.highlight : cfg.empty;
@@ -476,7 +476,7 @@ function showYesterdayModal() {
     const path = JSON.parse(pathJson);
 
     document.getElementById('yesterday-title').textContent =
-        `Hier — #${dayNum - 1} : ${yesterdayWord.toUpperCase()}`;
+        `Hier — #${dayNum} : ${yesterdayWord.toUpperCase()}`;
 
     let html = `<p>Le chemin le plus court hier était de <b>${yesterdayDist} coup${yesterdayDist > 1 ? 's' : ''}</b>.</p>`;
 
@@ -500,7 +500,7 @@ function initGame() {
     const dayNum = get_day_number(now);
     const targetUp = target.toUpperCase();
 
-    document.getElementById('subheader').textContent = `#${dayNum} : ${todayStart.toUpperCase()} → ${targetUp}`;
+    document.getElementById('subheader').textContent = `#${dayNum + 1} : ${todayStart.toUpperCase()} → ${targetUp}`;
 
     const savedGuesses = getGuesses();
     const lastPlayed = getTimeLastPlayed();
@@ -549,6 +549,9 @@ async function boot() {
 
     // Physical keyboard
     window.addEventListener('keydown', (e) => {
+        // Don't capture when modifier keys are held (Ctrl+C, Cmd+V, etc.)
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
         if (!document.querySelector('.Modal:not(.hide)')) {
             if (e.key === 'Backspace' || e.key === 'Enter' || /^[a-zA-Z]$/.test(e.key)) {
                 e.preventDefault();
