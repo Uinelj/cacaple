@@ -1,0 +1,499 @@
+:root {
+    --bg: #1a1a2e;
+    --bg-light: #16213e;
+    --surface: #0f3460;
+    --accent: #e2b93b;
+    --accent-glow: #f0d060;
+    --text: #eee;
+    --text-dim: #999;
+    --highlight: #e2b93b;
+    --error: #e74c3c;
+    --success: #2ecc71;
+    --box-bg: #1e2a45;
+    --box-border: #2a3a5c;
+    --key-bg: #2a3a5c;
+    --key-hover: #3a4a6c;
+    --modal-bg: #16213e;
+    --radius: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* ========== Header ========== */
+
+.Header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px 8px;
+    position: relative;
+}
+
+.Header .title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Header h1 {
+    font-size: 2em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent), #f5c842);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.Header .logo {
+    font-size: 1.6em;
+}
+
+.Header .subheader {
+    font-size: 0.85em;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.header-buttons {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.header-buttons button {
+    background: none;
+    border: none;
+    font-size: 1.3em;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 4px;
+}
+
+.header-buttons button:hover {
+    opacity: 1;
+}
+
+/* ========== Game Area ========== */
+
+.GameArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ScrollContainer {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 16px;
+    scroll-behavior: smooth;
+}
+
+.RowContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 8px;
+}
+
+.RowContainer.jump .Row:last-child {
+    animation: jump 0.5s ease;
+}
+
+@keyframes jump {
+    0%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-20px); }
+}
+
+/* ========== Row & Box ========== */
+
+.Row {
+    display: flex;
+    gap: 6px;
+}
+
+.Box {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--box-bg);
+    border: 2px solid var(--box-border);
+    border-radius: var(--radius);
+    transition: all 0.15s ease;
+}
+
+.Box.highlight {
+    background: var(--accent);
+    border-color: var(--accent-glow);
+    color: #1a1a2e;
+}
+
+.Box.current {
+    border-color: var(--text-dim);
+}
+
+.Box.pop {
+    animation: pop 0.1s ease;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+/* ========== Error Message ========== */
+
+.ErrorMessage {
+    text-align: center;
+    color: var(--error);
+    font-size: 0.9em;
+    font-weight: 600;
+    min-height: 1.5em;
+    padding: 4px;
+    transition: opacity 0.2s;
+}
+
+.ErrorMessage.visible {
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+/* ========== Keyboard ========== */
+
+.Keyboard {
+    padding: 8px 4px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.KeyboardRow {
+    display: flex;
+    gap: 4px;
+}
+
+.Key {
+    min-width: 32px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+    font-weight: 600;
+    background: var(--key-bg);
+    border: none;
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    padding: 0 10px;
+    transition: background 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+    text-transform: uppercase;
+}
+
+.Key:active {
+    background: var(--key-hover);
+    transform: scale(0.95);
+}
+
+.Key.wide {
+    min-width: 56px;
+    font-size: 0.8em;
+}
+
+/* ========== Modals ========== */
+
+.Modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.Modal.hide {
+    display: none;
+}
+
+.ModalBackdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.ModalContent {
+    position: relative;
+    background: var(--modal-bg);
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    z-index: 1;
+    border: 1px solid var(--box-border);
+}
+
+.ModalTitle {
+    font-size: 1.3em;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.ModalCloseButton {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.4em;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ========== Intro ========== */
+
+.Intro p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.Intro hr {
+    border: none;
+    border-top: 1px solid var(--box-border);
+    margin: 12px 0;
+}
+
+.highlight-example {
+    background: var(--accent);
+    color: #1a1a2e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* ========== Stats ========== */
+
+.Results {
+    text-align: center;
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+
+.Totals {
+    margin-bottom: 16px;
+}
+
+.Entries {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 8px;
+}
+
+.Entry {
+    text-align: center;
+}
+
+.Entry h2 {
+    font-size: 1.5em;
+    color: var(--accent);
+}
+
+.Entry p {
+    font-size: 0.75em;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.Histogram {
+    margin-top: 12px;
+}
+
+.HistogramRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 3px 0;
+    font-size: 0.85em;
+}
+
+.HistogramLabel {
+    width: 20px;
+    text-align: right;
+    color: var(--text-dim);
+}
+
+.HistogramBar {
+    background: var(--surface);
+    border-radius: 4px;
+    padding: 2px 8px;
+    min-width: 24px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 0.85em;
+    transition: width 0.3s ease;
+}
+
+.HistogramBar.current {
+    background: var(--accent);
+    color: #1a1a2e;
+}
+
+.copy-btn {
+    background: var(--accent);
+    color: #1a1a2e;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 24px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: transform 0.1s;
+}
+
+.copy-btn:active {
+    transform: scale(0.96);
+}
+
+.copy-feedback {
+    font-size: 0.85em;
+    margin-top: 6px;
+    min-height: 1.2em;
+}
+
+.copy-feedback.success { color: var(--success); }
+.copy-feedback.error { color: var(--error); }
+
+.Countdown {
+    text-align: center;
+    margin-top: 16px;
+    color: var(--text-dim);
+    font-size: 0.9em;
+}
+
+.Countdown .time {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 4px;
+}
+
+/* ========== Yesterday ========== */
+
+#yesterday-content {
+    text-align: center;
+}
+
+#yesterday-content p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+#yesterday-content .Row {
+    justify-content: center;
+    margin: 4px 0;
+}
+
+#yesterday-content .Box {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3em;
+}
+
+/* ========== Emoji Rain ========== */
+
+.EmojiRain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+    overflow: hidden;
+}
+
+.EmojiRaindrop {
+    position: absolute;
+    top: -40px;
+    font-size: 2em;
+    animation: rain linear forwards;
+}
+
+@keyframes rain {
+    to {
+        top: 110vh;
+        opacity: 0;
+    }
+}
+
+/* ========== Responsive ========== */
+
+@media (max-width: 380px) {
+    .Box {
+        width: 48px;
+        height: 48px;
+        font-size: 1.4em;
+    }
+
+    .Key {
+        min-width: 26px;
+        height: 42px;
+        font-size: 0.85em;
+        padding: 0 6px;
+    }
+}
+
+@media (min-width: 500px) {
+    .Box {
+        width: 62px;
+        height: 62px;
+        font-size: 1.8em;
+    }
+}
