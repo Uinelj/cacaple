@@ -274,7 +274,7 @@ mod tests {
     #[test]
     fn test_data_loads() {
         let data = GameData::load();
-        assert!(data.words.len() > 2000, "Should have >2000 words");
+        assert!(data.words.len() > 1000, "Should have >1000 words, got {}", data.words.len());
         assert!(data.words.contains("pipi"));
         assert!(data.distances.contains_key("pipi"));
         assert_eq!(data.distances["pipi"], 0);

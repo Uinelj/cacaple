@@ -24,18 +24,18 @@ A French word-chain puzzle game (clone of Poople.io) where you transform a daily
 - **WASM bundle:** ~111KB including all word data
 
 ## Stats
-- **2,945 reachable words** from PIPI (out of 3,135 total in dictionary)
-- **Max distance:** 13 steps
+- **1,865 reachable words** from PIPI (out of 1,993 in Lexique383)
+- **Max distance:** 12 steps
 - **1,500 curated start words** at distances 4–8
+- **98KB WASM bundle** with all data embedded
 - **6 Rust tests** all passing
 
 ## Word List Status
-- [x] Crawl lalanguefrancaise.com (71 pages of 4-letter words) → 3,445 words
-- [x] Merge with UD French treebank words (GSD + Sequoia)
-- [x] Normalize accents to ASCII → 3,135 unique words
-- [x] BFS from PIPI → 2,945 reachable, max distance 13
-- [x] Generate distances.csv and start_words.csv
-- [ ] Manual cleanup (some obscure words may remain — low priority)
+- [x] ~~Crawl lalanguefrancaise.com~~ (too many obscure/non-French words like "coat", "cobe", "clue")
+- [x] Switch to **Lexique383** (lexique.org) as primary source — frequency-verified French words only
+- [x] Normalize accents to ASCII → 1,993 unique 4-letter words
+- [x] BFS from PIPI → 1,865 reachable, max distance 12
+- [x] Generate distances.csv and start_words.csv (frequency-sorted start words)
 
 ## Implementation Checklist
 - [x] Rust crate skeleton (lib.rs with wasm-bindgen)
